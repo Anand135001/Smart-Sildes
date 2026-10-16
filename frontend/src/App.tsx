@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import { SmartSlideRenderer }  from './components/SmartSlideRenderer'
-import { networkScene } from './visuals/scenes'
+import { networkScene, activationScene, weightsScene } from './visuals/scenes'
 
 
 type LessonStep = {
@@ -54,179 +54,11 @@ function NetworkDiagram() {
 }
 
 function WeightsDiagram() {
-  const inputYs = [83, 143, 203, 263]
-
-  return (
-    <svg
-      className="diagram"
-      viewBox="0 0 540 340"
-      role="img"
-      aria-label="Weighted inputs and bias combine inside a neuron"
-    >
-      <defs>
-        <marker
-          id="arrowhead"
-          markerWidth="8"
-          markerHeight="8"
-          refX="6"
-          refY="3"
-          orient="auto"
-        >
-          <path d="M0,0 L0,6 L6,3 z" fill="#93A3B8" />
-        </marker>
-      </defs>
-
-      {inputYs.map((y, index) => (
-        <g key={y}>
-          <line
-            x1="95"
-            y1={y}
-            x2="260"
-            y2="174"
-            className="signal-line"
-            style={{ animationDelay: `${index * 0.2}s` }}
-            markerEnd="url(#arrowhead)"
-          />
-          <circle cx="75" cy={y} r="17" className="neuron" />
-          <text x="42" y={y + 4} className="small-label">
-            x{index + 1}
-          </text>
-          <text
-            x="166"
-            y={y - 7}
-            className="weight-label"
-            transform={`rotate(${(174 - y) * 0.1}, 166, ${y - 7})`}
-          >
-            w{index + 1}
-          </text>
-        </g>
-      ))}
-
-      <line
-        x1="276"
-        y1="91"
-        x2="276"
-        y2="147"
-        className="bias-line"
-        markerEnd="url(#arrowhead)"
-      />
-      <circle cx="276" cy="70" r="19" className="bias-node" />
-      <text
-        x="276"
-        y="74"
-        textAnchor="middle"
-        className="node-letter"
-      >
-        b
-      </text>
-      <text x="306" y="73" className="small-label">
-        Bias
-      </text>
-
-      <circle cx="276" cy="177" r="32" className="sum-node" />
-      <text
-        x="276"
-        y="187"
-        textAnchor="middle"
-        className="sum-symbol"
-      >
-        Σ
-      </text>
-
-      <line
-        x1="310"
-        y1="177"
-        x2="366"
-        y2="177"
-        className="network-connection"
-        markerEnd="url(#arrowhead)"
-      />
-
-      <rect
-        x="370"
-        y="148"
-        width="78"
-        height="58"
-        rx="12"
-        className="activation-node"
-      />
-      <text
-        x="409"
-        y="183"
-        textAnchor="middle"
-        className="node-letter"
-      >
-        f(x)
-      </text>
-      <text x="409" y="228" textAnchor="middle" className="small-label">
-        Activation
-      </text>
-
-      <line
-        x1="448"
-        y1="177"
-        x2="491"
-        y2="177"
-        className="network-connection"
-        markerEnd="url(#arrowhead)"
-      />
-      <text x="493" y="160" className="small-label">
-        Output
-      </text>
-    </svg>
-  )
+  return <SmartSlideRenderer scene={weightsScene} />
 }
 
 function ActivationDiagram() {
-  return (
-    <svg
-      className="diagram"
-      viewBox="0 0 540 340"
-      role="img"
-      aria-label="Sigmoid activation curve"
-    >
-      <line x1="75" y1="270" x2="480" y2="270" className="chart-axis" />
-      <line x1="270" y1="295" x2="270" y2="38" className="chart-axis" />
-
-      <line x1="75" y1="90" x2="480" y2="90" className="chart-grid" />
-      <line x1="75" y1="180" x2="480" y2="180" className="chart-grid" />
-
-      <path
-        d="M 88 252 C 160 252, 195 247, 224 217 S 258 152, 270 135 S 310 70, 360 65 S 435 65, 470 65"
-        className="activation-curve"
-      />
-
-      <circle cx="270" cy="135" r="8" className="chart-point" />
-      <line
-        x1="270"
-        y1="135"
-        x2="270"
-        y2="270"
-        className="chart-guide"
-      />
-
-      <g className="chart-label">
-        <text x="476" y="291" textAnchor="end">
-          Input value
-        </text>
-        <text x="282" y="31">
-          Output
-        </text>
-        <text x="58" y="94" textAnchor="end">
-          1
-        </text>
-        <text x="58" y="184" textAnchor="end">
-          0.5
-        </text>
-        <text x="58" y="274" textAnchor="end">
-          0
-        </text>
-        <text x="282" y="126">
-          Example
-        </text>
-      </g>
-    </svg>
-  )
+  return <SmartSlideRenderer scene={activationScene} />
 }
 
 function SmartVisual({ activeStep }: { activeStep: number }) {

@@ -662,3 +662,13 @@
     animation: none;
   }
 }
+
+.visual-polyline {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.visual-polyline.is-animated {
+  stroke-dasharray: 6 6;
+  animation: visual-signal-flow 1.2s linear infinite;
+}

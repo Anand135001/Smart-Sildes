@@ -36,6 +36,32 @@ export function SmartSlideRenderer({
 
       {scene.elements.map((element) => {
         switch (element.type) {
+          
+          case 'polyline':
+            return (
+              <polyline
+                key={element.id}
+                id={element.id}
+                className={[
+                  'visual-polyline',
+                  element.animated ? 'is-animated' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                points={element.points
+                  .map((point) => `${point.x},${point.y}`)
+                  .join(' ')}
+                fill={element.fill ?? 'none'}
+                stroke={element.stroke ?? '#4b86e5'}
+                strokeWidth={element.strokeWidth ?? 3}
+                strokeDasharray={
+                  element.dashed ? '5 5' : undefined
+                }
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )
+    
           case 'circle':
             return (
               <circle

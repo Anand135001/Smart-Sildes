@@ -47,6 +47,16 @@ export type VisualElement =
       anchor?: 'start' | 'middle' | 'end'
       letterSpacing?: number
     }
+  | {
+      id: string
+      type: 'polyline'
+      points: Array<{ x: number; y: number }>
+      stroke?: string
+      strokeWidth?: number
+      fill?: string
+      dashed?: boolean
+      animated?: boolean
+    }
 
 export type VisualScene = {
   id: string
