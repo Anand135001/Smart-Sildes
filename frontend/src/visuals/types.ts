@@ -86,3 +86,21 @@ export type VisualAction =
       label?: string
       color?: string
     }
+
+export type SmartLessonStep = {
+  id: string
+  label: string
+  title: string
+  paragraphs: string[]
+  takeaway: string
+  scene: VisualScene
+  actions: VisualAction[]
+}
+
+export type SmartLesson = {
+  id: string
+  title: string
+  subject: string
+  estimatedMinutes: number
+  steps: SmartLessonStep[]
+}
