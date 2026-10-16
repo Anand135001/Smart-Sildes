@@ -614,3 +614,51 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* Generic Smart Slide renderer */
+
+.visual-engine {
+  overflow: visible;
+}
+
+.visual-node {
+  transition:
+    fill 180ms ease,
+    stroke 180ms ease,
+    filter 180ms ease;
+}
+
+.visual-node.is-highlighted {
+  stroke: #f59e0b;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.45));
+}
+
+.visual-line {
+  stroke-linecap: round;
+  transition:
+    stroke 180ms ease,
+    opacity 180ms ease;
+}
+
+.visual-line.is-animated {
+  stroke-dasharray: 6 6;
+  animation: visual-signal-flow 1.2s linear infinite;
+}
+
+.visual-label {
+  user-select: none;
+}
+
+@keyframes visual-signal-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visual-line.is-animated {
+    animation: none;
+  }
+}

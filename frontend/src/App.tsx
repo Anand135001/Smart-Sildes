@@ -1,6 +1,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
+import { SmartSlideRenderer }  from './components/SmartSlideRenderer'
+import { networkScene } from './visuals/scenes'
+
 
 type LessonStep = {
   id: number
@@ -46,89 +49,8 @@ const lessonSteps: LessonStep[] = [
   },
 ]
 
-type Point = {
-  id: string
-  x: number
-  y: number
-}
-
 function NetworkDiagram() {
-  const input: Point[] = [
-    { id: 'i1', x: 76, y: 126 },
-    { id: 'i2', x: 76, y: 218 },
-  ]
-
-  const hiddenA: Point[] = [
-    { id: 'a1', x: 216, y: 96 },
-    { id: 'a2', x: 216, y: 172 },
-    { id: 'a3', x: 216, y: 248 },
-  ]
-
-  const hiddenB: Point[] = [
-    { id: 'b1', x: 342, y: 96 },
-    { id: 'b2', x: 342, y: 172 },
-    { id: 'b3', x: 342, y: 248 },
-  ]
-
-  const output: Point[] = [{ id: 'o1', x: 478, y: 172 }]
-  const layers = [input, hiddenA, hiddenB, output]
-
-  const connections = layers
-    .slice(0, -1)
-    .flatMap((layer, index) =>
-      layer.flatMap((from) =>
-        layers[index + 1].map((to) => ({ from, to })),
-      ),
-    )
-
-  return (
-    <svg
-      className="diagram"
-      viewBox="0 0 540 320"
-      role="img"
-      aria-label="Neural network with input, hidden, and output layers"
-    >
-      {connections.map(({ from, to }) => (
-        <line
-          key={`${from.id}-${to.id}`}
-          className="network-connection"
-          x1={from.x}
-          y1={from.y}
-          x2={to.x}
-          y2={to.y}
-        />
-      ))}
-
-      {layers.map((layer, layerIndex) =>
-        layer.map((point) => (
-          <g key={point.id}>
-            <circle
-              cx={point.x}
-              cy={point.y}
-              r={layerIndex === 3 ? 17 : 13}
-              className={
-                layerIndex === 3
-                  ? 'neuron neuron-output'
-                  : 'neuron'
-              }
-            />
-          </g>
-        )),
-      )}
-
-      <g className="diagram-label">
-        <text x="76" y="293" textAnchor="middle">
-          INPUT
-        </text>
-        <text x="279" y="293" textAnchor="middle">
-          HIDDEN LAYERS
-        </text>
-        <text x="478" y="293" textAnchor="middle">
-          OUTPUT
-        </text>
-      </g>
-    </svg>
-  )
+  return <SmartSlideRenderer scene={networkScene}></SmartSlideRenderer>
 }
 
 function WeightsDiagram() {
