@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import { SmartSlideRenderer }  from './components/SmartSlideRenderer'
 import { networkScene, activationScene, weightsScene } from './visuals/scenes'
-
+import type { VisualAction } from './visuals/types'
 
 type LessonStep = {
   id: number
@@ -49,16 +49,77 @@ const lessonSteps: LessonStep[] = [
   },
 ]
 
-function NetworkDiagram() {
-  return <SmartSlideRenderer scene={networkScene}></SmartSlideRenderer>
+const visualActionsByStep: VisualAction[][] = [
+  [
+    {
+      type: 'focus',
+      target: 'input-1',
+      label: 'Input neuron',
+    },
+    {
+      type: 'animate_signal',
+      from: 'input-1',
+      to: 'hidden-a1',
+      durationMs: 1400,
+    },
+  ],
+  [
+    {
+      type: 'highlight',
+      target: 'sum-node',
+      color: '#f59e0b',
+    },
+    {
+      type: 'animate_signal',
+      from: 'input-1',
+      to: 'sum-node',
+      durationMs: 1400,
+    },
+    {
+      type: 'focus',
+      target: 'sum-node',
+      label: 'Combine inputs',
+    },
+  ],
+  [
+    {
+      type: 'highlight',
+      target: 'sigmoid-curve',
+      color: '#f59e0b',
+    },
+    {
+      type: 'focus',
+      target: 'example-point',
+      label: 'Example output',
+    },
+  ],
+]
+
+function NetworkDiagram({actions}: {actions: VisualAction[]}){
+  return (
+    <SmartSlideRenderer
+      scene={networkScene}
+      actions={actions}
+    />
+  )
 }
 
-function WeightsDiagram() {
-  return <SmartSlideRenderer scene={weightsScene} />
+function WeightsDiagram({actions}: {actions: VisualAction[]}){
+  return(
+    <SmartSlideRenderer 
+      scene={weightsScene}
+      actions={actions}
+    />
+  ) 
 }
 
-function ActivationDiagram() {
-  return <SmartSlideRenderer scene={activationScene} />
+function ActivationDiagram({actions}: {actions: VisualAction[]}){
+  return(
+    <SmartSlideRenderer 
+      scene={activationScene}
+      actions={actions} 
+    />
+  )
 }
 
 function SmartVisual({ activeStep }: { activeStep: number }) {
@@ -81,9 +142,9 @@ function SmartVisual({ activeStep }: { activeStep: number }) {
           <span>{lessonSteps[activeStep].label}</span>
         </div>
 
-        {activeStep === 0 && <NetworkDiagram />}
-        {activeStep === 1 && <WeightsDiagram />}
-        {activeStep === 2 && <ActivationDiagram />}
+        {activeStep === 0 && <NetworkDiagram actions={visualActionsByStep[0]} />}
+        {activeStep === 1 && <WeightsDiagram actions={visualActionsByStep[1]}/>}
+        {activeStep === 2 && <ActivationDiagram actions={visualActionsByStep[2]}/>}
 
         <div className="visual-hint">
           <span className="hint-dot" />

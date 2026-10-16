@@ -65,3 +65,24 @@ export type VisualScene = {
   height: number
   elements: VisualElement[]
 }
+
+
+export type VisualAction =
+  | {
+      type: 'highlight'
+      target: string
+      color?: string
+    }
+  | {
+      type: 'animate_signal'
+      from: string
+      to: string
+      color?: string
+      durationMs?: number
+    }
+  | {
+      type: 'focus'
+      target: string
+      label?: string
+      color?: string
+    }

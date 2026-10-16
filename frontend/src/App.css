@@ -672,3 +672,61 @@
   stroke-dasharray: 6 6;
   animation: visual-signal-flow 1.2s linear infinite;
 }
+
+.visual-line.is-highlighted,
+.visual-polyline.is-highlighted {
+  filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.35));
+}
+
+.visual-action-signal {
+  fill: none;
+  stroke-width: 3.5;
+  stroke-dasharray: 3 12;
+  stroke-linecap: round;
+  animation: visual-signal-flow 1.4s linear infinite;
+  pointer-events: none;
+}
+
+.visual-focus-ring {
+  fill: rgba(245, 158, 11, 0.06);
+  stroke-width: 2;
+  stroke-dasharray: 4 4;
+  animation: visual-focus-pulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.visual-cursor {
+  fill: #ffffff;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 2px 2px rgba(15, 23, 42, 0.15));
+  pointer-events: none;
+}
+
+.visual-focus-label {
+  font-size: 11px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: #ffffff;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+@keyframes visual-focus-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visual-action-signal,
+  .visual-focus-ring {
+    animation: none;
+  }
+}
