@@ -1,19 +1,33 @@
 
-import { useEffect, useRef, useState } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from 'react'
+
 import './App.css'
+
 import { SmartSlideRenderer } from './components/SmartSlideRenderer'
 import { neuralNetworkLesson } from './lessons/neuralNetworkLesson'
 import { validateSmartLesson } from './lessons/validateLesson'
+import type { SmartLesson } from './visuals/types'
 
-const lessonSteps = neuralNetworkLesson.steps
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001'
 
-const lessonErrors = validateSmartLesson(neuralNetworkLesson)
+const demoLessonErrors = validateSmartLesson(neuralNetworkLesson)
 
-if (import.meta.env.DEV && lessonErrors.length > 0) {
-  console.error('Invalid Smart Slide lesson:', lessonErrors)
+if (import.meta.env.DEV && demoLessonErrors.length > 0) {
+  console.error('Invalid demo lesson:', demoLessonErrors)
 }
-
-function SmartVisual({ activeStep }: { activeStep: number }) {
+function SmartVisual({
+  lesson,
+  activeStep,
+}: {
+  lesson: SmartLesson
+  activeStep: number
+}) {
+  const lessonSteps = lesson.steps
   const step = lessonSteps[activeStep] ?? lessonSteps[0]
 
   return (
@@ -75,9 +89,98 @@ function SmartVisual({ activeStep }: { activeStep: number }) {
 }
 
 function App() {
+  const [lesson, setLesson] = useState<SmartLesson>(neuralNetworkLesson)
+  
   const [activeStep, setActiveStep] = useState(0)
-  const readingPanelRef = useRef<HTMLDivElement>(null)
+  const [topicInput, setTopicInput] = useState('')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generationError, setGenerationError] = useState<string | null>(null)
 
+const readingPanelRef = useRef<HTMLDivElement>(null)
+   
+  const handleGenerateLesson = async (
+    event: FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault()
+  
+    const topic = topicInput.trim()
+  
+    if (topic.length < 2 || topic.length > 180) {
+      setGenerationError('Enter a topic between 2 and 180 characters.',)
+      return
+    }
+  
+    setIsGenerating(true)
+    setGenerationError(null)
+  
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/lessons`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ topic }),
+        },
+      )
+  
+      const payload: unknown = await response.json()
+  
+      if (!response.ok) {
+        let message = `Request failed with status ${response.status}.`
+  
+        if (
+          typeof payload === 'object' &&
+          payload !== null &&
+          'error' in payload &&
+          typeof payload.error === 'string'
+        ) {
+          message = payload.error
+        }
+  
+        throw new Error(message)
+      }
+  
+      if (
+        typeof payload !== 'object' ||
+        payload === null ||
+        !('lesson' in payload)
+      ) {
+        throw new Error(
+          'The backend response did not contain a lesson.',
+        )
+      }
+  
+      const candidate = payload.lesson
+      const errors = validateSmartLesson(candidate)
+  
+      if (errors.length > 0) {
+        throw new Error(
+          `The generated lesson failed validation: ${errors
+            .slice(0, 3)
+            .join(' ')}`,
+        )
+      }
+  
+      // Replace the demo only after validation succeeds.
+      setLesson(candidate as SmartLesson)
+      setActiveStep(0)
+  
+      if (readingPanelRef.current) {
+        readingPanelRef.current.scrollTop = 0
+      }
+    } catch (error) {
+      setGenerationError(
+        error instanceof Error
+          ? error.message
+          : 'Something went wrong while generating the lesson.',
+      )
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+  
   useEffect(() => {
     const root = readingPanelRef.current
     if (!root) return
@@ -110,7 +213,7 @@ function App() {
     sections.forEach((section) => observer.observe(section))
 
     return () => observer.disconnect()
-  }, [])
+  }, [lesson])
 
   const jumpToStep = (index: number) => {
     const section = readingPanelRef.current?.querySelector<HTMLElement>(
@@ -141,9 +244,7 @@ function App() {
           </span>
         </a>
 
-        <div className="topbar-center">
-          VISUAL LEARNING WORKSPACE
-        </div>
+        <div className="topbar-center">VISUAL LEARNING WORKSPACE</div>
 
         <div className="lesson-status">
           <span className="status-dot" />
@@ -157,11 +258,9 @@ function App() {
           ref={readingPanelRef}
         >
           <div className="lesson-intro">
-            <div className="topic-tag">
-              {neuralNetworkLesson.subject}
-            </div>
+            <div className="topic-tag">{lesson.subject}</div>
 
-            <h1>{neuralNetworkLesson.title}</h1>
+            <h1>{lesson.title}</h1>
 
             <p>
               Follow the explanation. Watch the visual change as
@@ -169,15 +268,51 @@ function App() {
             </p>
 
             <div className="lesson-meta">
-              <span>{lessonSteps.length} learning steps</span>
+              <span>{lesson.steps.length} learning steps</span>
               <span className="meta-divider" />
-              <span>
-                About {neuralNetworkLesson.estimatedMinutes} minutes
-              </span>
+              <span>About {lesson.estimatedMinutes} minutes</span>
             </div>
+
+
+            <form
+              className="generate-form"
+              onSubmit={handleGenerateLesson}
+            >
+              <label htmlFor="lesson-topic">
+                What do you want to understand?
+              </label>
+            
+              <div className="generate-controls">
+                <input
+                  id="lesson-topic"
+                  type="text"
+                  value={topicInput}
+                  onChange={(event) => setTopicInput(event.target.value)}
+                  placeholder="e.g. How does backpropagation work?"
+                  minLength={2}
+                  maxLength={180}
+                  required
+                />
+            
+                <button type="submit" disabled={isGenerating}>
+                  {isGenerating ? 'Generating…' : 'Generate lesson'}
+                </button>
+              </div>
+            
+              <p className="generate-hint">
+                Your lesson will include an explanation and synchronized
+                visuals.
+              </p>
+            
+              {generationError && (
+                <p className="generation-error" role="alert">
+                  {generationError}
+                </p>
+              )}
+            </form>
           </div>
 
-          {lessonSteps.map((step, index) => (
+          {lesson.steps.map((step, index) => (
             <article
               key={step.id}
               className={`lesson-step ${
@@ -210,13 +345,13 @@ function App() {
                 </div>
               </div>
 
-              {index < lessonSteps.length - 1 && (
+              {index < lesson.steps.length - 1 && (
                 <button
                   className="next-step"
                   onClick={() => jumpToStep(index + 1)}
                 >
                   Continue to{' '}
-                  {lessonSteps[index + 1].label.toLowerCase()}
+                  {lesson.steps[index + 1].label.toLowerCase()}
                   <span aria-hidden="true">↓</span>
                 </button>
               )}
@@ -231,7 +366,7 @@ function App() {
           </div>
         </section>
 
-        <SmartVisual activeStep={activeStep} />
+        <SmartVisual lesson={lesson} activeStep={activeStep} />
       </main>
     </div>
   )
