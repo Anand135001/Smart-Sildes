@@ -20,29 +20,98 @@ const demoLessonErrors = validateSmartLesson(neuralNetworkLesson)
 if (import.meta.env.DEV && demoLessonErrors.length > 0) {
   console.error('Invalid demo lesson:', demoLessonErrors)
 }
+
 function SmartVisual({
   lesson,
   activeStep,
+  audioMode,
+  isSpeaking,
+  isPaused,
+  audioError,
+  onToggleAudioMode,
+  onPlayAudio,
+  onPauseAudio,
+  onStopAudio,
 }: {
   lesson: SmartLesson
   activeStep: number
+  audioMode: boolean
+  isSpeaking: boolean
+  isPaused: boolean
+  audioError: string | null
+  onToggleAudioMode: () => void
+  onPlayAudio: () => void
+  onPauseAudio: () => void
+  onStopAudio: () => void
 }) {
   const lessonSteps = lesson.steps
   const step = lessonSteps[activeStep] ?? lessonSteps[0]
 
   return (
-    <aside className="visual-panel">
+    <aside
+      className={
+        audioMode
+          ? 'visual-panel audio-mode'
+          : 'visual-panel'
+      }
+    >
       <div className="visual-topbar">
         <div>
           <span className="eyebrow">SMART SLIDE</span>
-          <h2>Visual explanation</h2>
+          <h2>
+            {audioMode ? 'Listen and learn' : 'Visual explanation'}
+          </h2>
         </div>
-
-        <span className="live-indicator">
-          <span />
-          LIVE
-        </span>
+      
+        <div className="visual-topbar-actions">
+          {audioMode && (
+            <>
+              <button
+                className="audio-control"
+                onClick={onPlayAudio}
+                disabled={isSpeaking && !isPaused}
+                type="button"
+              >
+                {isPaused ? 'Resume' : isSpeaking ? 'Playing…' : 'Play audio'}
+              </button>
+      
+              <button
+                className="audio-control"
+                onClick={onPauseAudio}
+                disabled={!isSpeaking}
+                type="button"
+              >
+                Pause
+              </button>
+      
+              <button
+                className="audio-control"
+                onClick={onStopAudio}
+                disabled={!isSpeaking && !isPaused}
+                type="button"
+              >
+                Stop
+              </button>
+            </>
+          )}
+      
+          <button
+            className="audio-mode-toggle"
+            onClick={onToggleAudioMode}
+            type="button"
+          >
+            {audioMode ? 'Exit audio mode' : 'Audio mode'}
+          </button>
+      
+          {!audioMode && (
+            <span className="live-indicator">
+              <span />
+              LIVE
+            </span>
+          )}
+        </div>
       </div>
+
 
       <div className="visual-stage">
         <div className="stage-caption">
@@ -61,6 +130,9 @@ function SmartVisual({
           <span className="hint-dot" />
           Visual updates as you move through the lesson
         </div>
+
+        {audioError && (
+          <p className="audio-error" role="alert"> {audioError} </p>)}
       </div>
 
       <div className="visual-footer">
@@ -96,7 +168,14 @@ function App() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationError, setGenerationError] = useState<string | null>(null)
 
-const readingPanelRef = useRef<HTMLDivElement>(null)
+  const [audioMode, setAudioMode] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const [audioError, setAudioError] = useState<string | null>(null)
+  
+  const narrationRunRef = useRef(false)
+
+  const readingPanelRef = useRef<HTMLDivElement>(null)
    
   const handleGenerateLesson = async (
     event: FormEvent<HTMLFormElement>,
@@ -180,7 +259,137 @@ const readingPanelRef = useRef<HTMLDivElement>(null)
       setIsGenerating(false)
     }
   }
+
+  const speakLessonStep = (stepIndex: number) => {
+    if (!narrationRunRef.current) return
   
+    const step = lesson.steps[stepIndex]
+  
+    if (!step) {
+      narrationRunRef.current = false
+      setIsSpeaking(false)
+      setIsPaused(false)
+      return
+    }
+  
+    setActiveStep(stepIndex)
+  
+    const narration = [
+      step.title,
+      ...step.paragraphs,
+      `Key idea. ${step.takeaway}`,
+    ].join('. ')
+  
+    const utterance = new SpeechSynthesisUtterance(narration)
+  
+    // Slightly slower speech can be easier to follow.
+    utterance.rate = 0.9
+  
+    utterance.onstart = () => {
+      setIsSpeaking(true)
+      setIsPaused(false)
+    }
+  
+    utterance.onend = () => {
+      if (!narrationRunRef.current) return
+  
+      if (stepIndex + 1 < lesson.steps.length) {
+        speakLessonStep(stepIndex + 1)
+      } else {
+        narrationRunRef.current = false
+        setIsSpeaking(false)
+        setIsPaused(false)
+      }
+    }
+  
+    utterance.onerror = (event) => {
+      if (
+        event.error === 'canceled' ||
+        event.error === 'interrupted'
+      ) {
+        return
+      }
+  
+      narrationRunRef.current = false
+      setIsSpeaking(false)
+      setIsPaused(false)
+      setAudioError('Speech playback failed. Try playing the lesson again.')
+    }
+  
+    window.speechSynthesis.speak(utterance)
+  }
+  
+  const handlePlayAudio = () => {
+      if (
+        typeof window === 'undefined' ||
+        !('speechSynthesis' in window)
+      ) {
+        setAudioError(
+          'Your browser does not support speech synthesis.',
+        )
+        return
+      }
+    
+      setAudioError(null)
+    
+      // Resume the existing utterance if playback was paused.
+      if (isPaused) {
+        window.speechSynthesis.resume()
+        setIsPaused(false)
+        setIsSpeaking(true)
+        return
+      }
+    
+      // Start again from the currently active step.
+      window.speechSynthesis.cancel()
+      narrationRunRef.current = true
+      setIsSpeaking(false)
+      setIsPaused(false)
+    
+      speakLessonStep(activeStep)
+    }
+    
+    const handlePauseAudio = () => {
+      if (!window.speechSynthesis.speaking) return
+    
+      window.speechSynthesis.pause()
+      setIsSpeaking(false)
+      setIsPaused(true)
+    }
+    
+    const handleStopAudio = () => {
+      narrationRunRef.current = false
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+      setIsPaused(false)
+    }
+    
+    const handleToggleAudioMode = () => {
+      if (audioMode) {
+        handleStopAudio()
+      }
+    
+      setAudioError(null)
+      setAudioMode(!audioMode)
+    }
+
+  useEffect(() => {
+    narrationRunRef.current = false
+    window.speechSynthesis?.cancel()
+    
+    setIsSpeaking(false)
+    setIsPaused(false)
+  }, [lesson])
+  
+
+  useEffect(() => {
+    return () => {
+      narrationRunRef.current = false
+      window.speechSynthesis?.cancel()
+    }
+  }, [])
+  
+
   useEffect(() => {
     const root = readingPanelRef.current
     if (!root) return
@@ -229,7 +438,7 @@ const readingPanelRef = useRef<HTMLDivElement>(null)
   }
 
   return (
-    <div className="app-shell">
+    <div className={audioMode ? 'app-shell audio-mode' : 'app-shell'}>
       <header className="topbar">
         <a className="brand" href="/" aria-label="Smart Slide home">
           <span className="brand-mark">
@@ -251,8 +460,8 @@ const readingPanelRef = useRef<HTMLDivElement>(null)
           DEMO LESSON
         </div>
       </header>
-
-      <main className="workspace">
+  
+      <main className={audioMode ? 'workspace audio-mode' : 'workspace'}>
         <section
           className="reading-panel"
           ref={readingPanelRef}
@@ -366,7 +575,18 @@ const readingPanelRef = useRef<HTMLDivElement>(null)
           </div>
         </section>
 
-        <SmartVisual lesson={lesson} activeStep={activeStep} />
+        <SmartVisual
+          lesson={lesson}
+          activeStep={activeStep}
+          audioMode={audioMode}
+          isSpeaking={isSpeaking}
+          isPaused={isPaused}
+          audioError={audioError}
+          onToggleAudioMode={handleToggleAudioMode}
+          onPlayAudio={handlePlayAudio}
+          onPauseAudio={handlePauseAudio}
+          onStopAudio={handleStopAudio}
+        />
       </main>
     </div>
   )

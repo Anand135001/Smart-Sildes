@@ -809,3 +809,139 @@
     flex-direction: column;
   }
 }
+
+
+/* Audio-mode controls */
+
+.visual-topbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.audio-control,
+.audio-mode-toggle {
+  padding: 8px 11px;
+  border: 1px solid #dce3ed;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #35445c;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.audio-control:hover,
+.audio-mode-toggle:hover {
+  background: #f1f5ff;
+  border-color: #a8c1f0;
+}
+
+.audio-control:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.audio-error {
+  max-width: 90%;
+  color: #ef4444;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Full-screen dark canvas */
+
+.app-shell.audio-mode {
+  min-height: 100vh;
+  background: #080a0f;
+}
+
+.app-shell.audio-mode .topbar {
+  display: none;
+}
+
+.workspace.audio-mode {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 100vh;
+  min-height: 0;
+  padding: 24px;
+}
+
+.workspace.audio-mode .reading-panel {
+  display: none;
+}
+
+.visual-panel.audio-mode {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  border-color: #242b39;
+  background: #080a0f;
+  color: #e2e8f0;
+  box-shadow: none;
+}
+
+.audio-mode .visual-topbar,
+.audio-mode .visual-footer {
+  border-color: #242b39;
+}
+
+.audio-mode .visual-topbar h2 {
+  color: #e2e8f0;
+}
+
+.audio-mode .eyebrow,
+.audio-mode .stage-caption,
+.audio-mode .visual-footer,
+.audio-mode .visual-hint {
+  color: #94a3b8;
+}
+
+.audio-mode .visual-stage {
+  background: #080a0f;
+}
+
+.audio-mode .visual-label {
+  fill: #cbd5e1;
+}
+
+.audio-mode .network-connection,
+.audio-mode .visual-line {
+  stroke: #475569;
+}
+
+.audio-mode .audio-control,
+.audio-mode .audio-mode-toggle {
+  border-color: #3a465a;
+  background: #151a24;
+  color: #e2e8f0;
+}
+
+.audio-mode .audio-control:hover,
+.audio-mode .audio-mode-toggle:hover {
+  background: #252e3d;
+}
+
+.audio-mode .audio-control:disabled {
+  opacity: 0.45;
+}
+
+@media (max-width: 600px) {
+  .workspace.audio-mode {
+    padding: 8px;
+  }
+
+  .audio-control,
+  .audio-mode-toggle {
+    padding: 7px 8px;
+    font-size: 10px;
+  }
+
+  .visual-topbar {
+    padding: 13px;
+  }
+}
